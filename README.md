@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EsoClear website
 
-## Getting Started
+Single-page biotechnology website for EsoClear, LLC. Built with Next.js (App Router), React, TypeScript, Tailwind CSS v4, Motion (`framer-motion`), and Lucide icons. Deployable to Vercel with no back-end services.
 
-First, run the development server:
+## Install and run
+
+Requires Node.js 20+.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then fill in values (see Configuration)
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Quality checks and production build:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Configuration
 
-## Learn More
+All variables are public (`NEXT_PUBLIC_*`) and optional. No secrets are required or used.
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Canonical URL for metadata, `sitemap.xml`, `robots.txt`, social cards. Falls back to `VERCEL_PROJECT_PRODUCTION_URL`, then `http://localhost:3000`. |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Approved public contact address. Enables the "Connect With EsoClear" link and the inquiry form. |
+| `NEXT_PUBLIC_CONTACT_EMAIL_COLLABORATION` | Optional address for collaboration inquiries (defaults to the general address). |
+| `NEXT_PUBLIC_CONTACT_EMAIL_RESEARCH` | Optional address for research partnership inquiries (defaults to the general address). |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+If no contact address is configured, the contact section shows a notice and the form is disabled; no address is invented.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Contact form behavior
 
-## Deploy on Vercel
+The form validates input in the browser and opens the visitor's email application via a `mailto:` link with the message prefilled. Nothing is submitted to or stored by this site, so no server credentials or spam-filtering service are needed. If you later add a server-side email provider, keep API keys in server-only environment variables (never `NEXT_PUBLIC_*`) and add bot protection (for example a CAPTCHA or rate limiting) at the same time.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Editing content
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Content lives in `src/data/`, not in components.
+
+- `src/data/siteContent.ts`: all headlines, body copy, mechanism pathway steps, evidence chart data, candidate summary, pipeline milestones and statuses, foundation text, patent application list, contact options, and footer disclaimers.
+- `src/data/references.ts`: the numbered reference list. Claims cite references by `id` (for example `refs: ["ghosh2012"]`); the citation numbers and the footer list update automatically. Citing an unknown `id` throws at build time.
+
+Safe-by-default switches to know about:
+
+- **Pipeline status:** each milestone has `status: "supported" | "in-progress" | "planned"`. Defaults are conservative. Change a status only with confirmation.
+- **Patent applications:** only entries with `verified: true` are displayed. Verify identifier, applicant, and EsoClear's rights before flipping a flag.
+- **Evidence chart:** `evidence.chart.rows` holds the percentages and group sizes.
+
+Before publishing any change that touches scientific, regulatory, or institutional claims, check [CONTENT_REVIEW.md](./CONTENT_REVIEW.md).
+
+## Project structure
+
+```
+src/
+  app/            layout, page, robots, sitemap, icon, social images
+  components/     one component per section plus shared UI and SVG illustrations
+  data/           siteContent.ts, references.ts
+  lib/            utils.ts, socialImage.tsx
+```
+
+Illustrations are hand-built SVG (`src/components/ScientificDiagram.tsx`) and are conceptual, not clinical imaging. Motion respects `prefers-reduced-motion` (global `MotionConfig` plus CSS fallbacks).
+
+## Deployment (Vercel)
+
+1. Push the repository to GitHub/GitLab/Bitbucket and import it in Vercel (framework preset: Next.js; no custom build settings needed).
+2. Add the environment variables above in Project Settings.
+3. Deploy. The site is fully static.
+
+## SEO and social
+
+Title, description, keywords, Open Graph and Twitter metadata are generated from `siteContent.ts`. `robots.txt`, `sitemap.xml`, favicon (`src/app/icon.svg`), and 1200x630 social preview images (`opengraph-image`, `twitter-image`) are generated by Next.js. Structured data (JSON-LD) is intentionally not included until company details are verified.
